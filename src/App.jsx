@@ -1040,6 +1040,7 @@ export default function App() {
           <span className="legend-chip chip-blank" /><span className="legend-label">Not recorded</span>
         </span>
         <span className="legend-hint">Tap any cell to cycle</span>
+        <span className="app-credit">Built by AiYogi · TwinFlame Ventures</span>
       </footer>
 
       {/* ── Modals ──────────────────────────────────────────────────────────── */}
@@ -1382,6 +1383,7 @@ function HelpModal({ onClose }) {
 
         <div className="help-footer">
           <p>Made In South Los Angeles · <strong>misla.org</strong></p>
+          <p className="help-credit">Built by <strong>AiYogi</strong> · <span>TwinFlame Ventures</span></p>
           <div className="help-footer-actions">
             <button type="button" className="btn btn-outline" onClick={onClose}>← Back</button>
             <button type="button" className="btn btn-primary" onClick={onClose}>Done</button>

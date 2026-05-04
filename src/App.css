@@ -685,7 +685,8 @@ col.col-pct  { width: 155px; }
   font-family: var(--heading); font-weight: 700; font-size: 12px; flex-shrink: 0;
 }
 .chip-blank { background: #f1f5f9; border: 1px solid var(--border); }
-.legend-hint { margin-left: auto; font-style: italic; color: #94a3b8; font-size: 11px; }
+.legend-hint { font-style: italic; color: #94a3b8; font-size: 11px; }
+.app-credit   { margin-left: auto; font-size: 11px; color: #94a3b8; white-space: nowrap; letter-spacing: .01em; }
 
 /* ── Modals ──────────────────────────────────────────────────────────────── */
 .modal-overlay {
@@ -901,7 +902,10 @@ kbd {
   background: #f8fafc; flex-shrink: 0;
   flex-wrap: wrap;
 }
-.help-footer p { font-size: 12px; color: var(--muted); flex: 1; }
+.help-footer p { font-size: 12px; color: var(--muted); margin: 0; }
+.help-credit { font-size: 11px !important; color: #94a3b8 !important; margin-top: 2px !important; }
+.help-credit strong { color: var(--orange); }
+.help-credit span   { color: #64748b; }
 .help-footer .btn { padding: 9px 24px; }
 .help-footer-actions { display: flex; gap: 8px; flex-shrink: 0; }
 .help-footer-actions .btn-outline {
@@ -1000,7 +1004,8 @@ kbd {
   /* Legend — compact but still labeled */
   .legend { padding: 6px 12px; gap: 8px; font-size: 11px; }
   .legend-chip { width: 18px; height: 18px; font-size: 10px; }
-  .legend-hint { display: none; }
+  .legend-hint  { display: none; }
+  .app-credit   { display: none; }
 
   /* Modals — bottom sheet */
   .modal-overlay { align-items: flex-end; padding: 0; }
