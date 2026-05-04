@@ -103,9 +103,11 @@ export default function App() {
   const [classMenuId,     setClassMenuId]     = useState(null) // id of tab with open ⋮ menu
   const [classMenuPos,    setClassMenuPos]    = useState({ top: 0, right: 0 })
   const [renamingClassId, setRenamingClassId] = useState(null) // id of tab currently being renamed
-  const undoTimerRef   = useRef(null)
-  const classMenuRef   = useRef(null)
-  const renameInputRef = useRef(null)
+  const [undoMarkAll,     setUndoMarkAll]     = useState(null) // { sessionId, label, snapshot } for undo toast
+  const undoTimerRef      = useRef(null)
+  const undoMarkTimerRef  = useRef(null)
+  const classMenuRef      = useRef(null)
+  const renameInputRef    = useRef(null)
 
   // ── Load ──────────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -283,12 +285,26 @@ export default function App() {
 
   // ── Mark all present (skips locked sessions) ──────────────────────────────
   async function markAllPresent() {
-    // Find the most recent visible session that is NOT locked.
     const target = [...visibleSessions].reverse().find(s => !s.locked)
     if (!target) return
+
+    // Snapshot current state for undo
+    const snapshot = {}
+    classStudents.forEach(s => {
+      const key = `${s.id}_${target.id}`
+      snapshot[key] = attendance[key] ?? null
+    })
+
     const updates = {}
     classStudents.forEach(s => { updates[`${s.id}_${target.id}`] = 'present' })
     setAttendance(prev => ({ ...prev, ...updates }))
+
+    // Show undo toast for 8 seconds
+    if (undoMarkTimerRef.current) clearTimeout(undoMarkTimerRef.current)
+    const label = target.label || fmtShort(target.session_date)
+    setUndoMarkAll({ sessionId: target.id, label, snapshot })
+    undoMarkTimerRef.current = setTimeout(() => setUndoMarkAll(null), 8000)
+
     if (IS_DEMO) return
     await Promise.all(classStudents.map(s =>
       fetch('/api/attendance', {
@@ -296,6 +312,52 @@ export default function App() {
         body: JSON.stringify({ student_id: s.id, session_id: target.id, status: 'present' }),
       })
     ))
+  }
+
+  // ── Undo "mark all present" ────────────────────────────────────────────────
+  async function undoMarkAllPresent() {
+    if (!undoMarkAll) return
+    const { sessionId, snapshot } = undoMarkAll
+    clearTimeout(undoMarkTimerRef.current)
+    setUndoMarkAll(null)
+    setAttendance(prev => ({ ...prev, ...snapshot }))
+    if (IS_DEMO) return
+    await Promise.all(
+      Object.entries(snapshot).map(([key, status]) => {
+        const [student_id] = key.split('_')
+        return fetch('/api/attendance', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ student_id: +student_id, session_id: sessionId, status: status ?? '' }),
+        })
+      })
+    )
+  }
+
+  // ── Clear all marks for the most recent unlocked session ───────────────────
+  function clearSession() {
+    const target = [...visibleSessions].reverse().find(s => !s.locked)
+    if (!target) return
+    const label = target.label || fmtShort(target.session_date)
+    setConfirm({
+      title: 'Clear all marks?',
+      name: label,
+      message: 'This will remove every attendance mark for this session. The cells will go back to blank.',
+      danger: true,
+      confirmLabel: '✕ Clear Session',
+      onConfirm: async () => {
+        setConfirm(null)
+        const clears = {}
+        classStudents.forEach(s => { clears[`${s.id}_${target.id}`] = null })
+        setAttendance(prev => ({ ...prev, ...clears }))
+        if (IS_DEMO) return
+        await Promise.all(classStudents.map(s =>
+          fetch('/api/attendance', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ student_id: s.id, session_id: target.id, status: '' }),
+          })
+        ))
+      },
+    })
   }
 
   // ── Lock / unlock a session ───────────────────────────────────────────────
@@ -713,6 +775,19 @@ export default function App() {
             >
               <span aria-hidden="true">✓</span><span className="btn-text"> All Present</span>
             </button>
+            <button
+              type="button" className="btn btn-ghost btn-clear"
+              onClick={clearSession}
+              disabled={!hasSessions || !markTarget}
+              title={
+                !hasSessions ? 'No sessions yet'
+                : !markTarget ? 'All visible sessions are locked'
+                : `Clear all marks — ${markTarget.label || fmtShort(markTarget.session_date)}`
+              }
+              aria-label="Clear all attendance marks for the most recent session"
+            >
+              <span aria-hidden="true">✕</span><span className="btn-text"> Clear</span>
+            </button>
             <button type="button" className="btn btn-secondary" onClick={() => setShowAddSession(true)} title="Add a new session date">
               <span aria-hidden="true">+</span><span className="btn-text"> Session</span>
             </button>
@@ -727,6 +802,14 @@ export default function App() {
       {IS_DEMO && (
         <div className="demo-banner">
           DEMO MODE — nothing saves. Remove <code>VITE_DEMO=true</code> from <code>.env.local</code> and add <code>POSTGRES_URL</code> to go live.
+        </div>
+      )}
+
+      {/* ── Undo "mark all present" toast ───────────────────────────────────── */}
+      {undoMarkAll && (
+        <div className="undo-bar undo-bar-mark">
+          <span>All students marked Present for <strong>{undoMarkAll.label}</strong>.</span>
+          <button type="button" className="undo-btn" onClick={undoMarkAllPresent}>↩ Undo</button>
         </div>
       )}
 

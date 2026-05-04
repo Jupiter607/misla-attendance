@@ -80,22 +80,28 @@ body {
 /* ── Undo bar (shown after class deletion) ───────────────────────────────── */
 .undo-bar {
   display: flex; align-items: center; justify-content: center; gap: 14px;
-  padding: 12px 20px;
+  padding: 10px 20px;
   background: #1e293b; color: #f8fafc;
   font-size: 14px; font-family: var(--font);
   animation: slide-down .2s ease;
   flex-shrink: 0;
 }
+/* Mark-all undo uses a softer green tint so it feels distinct from class-delete */
+.undo-bar-mark { background: #14532d; }
 @keyframes slide-down { from { transform: translateY(-100%); opacity: 0; } }
 .undo-btn {
   background: var(--orange); color: #fff; border: none;
   border-radius: 6px; padding: 6px 14px;
   font-family: var(--font); font-size: 13px; font-weight: 700;
-  cursor: pointer; min-height: 36px;
+  cursor: pointer; min-height: 34px;
   transition: background .15s, transform .1s;
 }
 .undo-btn:hover  { background: #d96515; }
 .undo-btn:active { transform: scale(.95); }
+
+/* Clear session button — same ghost style as All Present but uses red tint on hover */
+.btn-clear:not(:disabled):hover { background: #fee2e2; color: #b91c1c; border-color: #fca5a5; }
+.btn-clear:not(:disabled):active { background: #fecaca; }
 
 /* ── Danger modal variants ───────────────────────────────────────────────── */
 .modal-danger { border-top-color: #ef4444; }
