@@ -45,7 +45,7 @@ const schemaSql  = readFileSync(schemaPath, 'utf8')
 const statements = schemaSql
   .split(';')
   .map(s => s.trim())
-  .filter(s => s && !s.replace(/--[^\n]*/g, '').trim() === '')
+  .filter(s => s && s.replace(/--[^\n]*/g, '').trim() !== '')
 
 console.log(`\nRunning ${statements.length} SQL statements…\n`)
 
